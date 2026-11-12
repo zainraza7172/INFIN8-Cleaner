@@ -1,3 +1,4 @@
+
 name: INFIN8 Cleaner APK Build
 
 on:
@@ -24,28 +25,40 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Extract Android source
+        shell: bash
+        run: |
+          if [ ! -f "settings.gradle.kts" ] && [ ! -f "settings.gradle" ]; then
+            if [ ! -f "INFIN8-Cleaner-GitHub-Source.zip" ]; then
+              echo "ERROR: Source ZIP not found."
+              exit 1
+            fi
+
+            mkdir -p _source
+            unzip -oq INFIN8-Cleaner-GitHub-Source.zip -d _source
+          fi
+
       - name: Locate Android project
         id: project
         shell: bash
         run: |
           PROJECT_DIR="."
 
-          if [ ! -f "settings.gradle.kts" ] && [ ! -f "settings.gradle" ]; then
-            FOUND=$(find . -maxdepth 4 \
+          if [ ! -f "$PROJECT_DIR/settings.gradle.kts" ] && [ ! -f "$PROJECT_DIR/settings.gradle" ]; then
+            FOUND=$(find _source -maxdepth 5 \
               \( -name settings.gradle.kts -o -name settings.gradle \) \
               -print -quit)
 
             if [ -z "$FOUND" ]; then
               echo "ERROR: Gradle settings file not found."
-              echo "Repository files:"
-              find . -maxdepth 4 -type f | sort
+              find _source -maxdepth 5 -type f | sort
               exit 1
             fi
 
             PROJECT_DIR=$(dirname "$FOUND")
           fi
 
-          echo "Project directory: $PROJECT_DIR"
+          echo "Android project: $PROJECT_DIR"
           echo "project_dir=$PROJECT_DIR" >> "$GITHUB_OUTPUT"
 
       - name: Setup Gradle
